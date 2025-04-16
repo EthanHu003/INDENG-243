@@ -39,3 +39,12 @@ This repository contains the full codebase for a housing recommendation demo sit
   This file. Includes documentation and file descriptions.
 
 ---
+
+## 🚀 How to Run Locally
+
+1. Install required Python packages (e.g., `Flask`, `openai`, etc.).
+2. Set up your OpenAI API key inside `model_code.py`.
+3. Launch the backend:
+   ```bash
+   cd backended
+   python api.py
