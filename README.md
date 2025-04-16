@@ -1,31 +1,33 @@
-# INDENG-243 Final Project – Rental Finder (Ethan Hu)
+# INDENG-243 Final Project – Rental Finder
 
-This repository contains coursework and project work for the course **INDENG 243: Data Science for Industrial Engineering and Operations Research** at **UC Berkeley**, submitted by **Ethan Hu**.
+This repository contains the full codebase for a housing recommendation demo site built for UC Berkeley INDENG 243 - Module 3.
 
----
+The project is structured into three main components:
 
-## 📁 Contents
+📁 Project Structure
+frontend/
+search_map.html
+The main frontend HTML file.
+Users input queries here (e.g., "Philly big house 2000") and receive housing recommendations as result cards.
+A toggleable full-screen map function is included but currently hidden for performance reasons.
 
-- `INDENG 243 Module 1.ipynb`: Exploratory data analysis and statistical modeling.
-- `INDENG 243 Module 2-ARIMA.ipynb`: Time series forecasting using ARIMA models.
-- `index.html` + `berkeley_logo.png`: The final project website (Module 3), titled **Rental Finder**.
+berkeley_logo.png
+Berkeley logo used in the website header.
 
----
+backended/
+api.py
+Flask API backend.
+Hosts the /recommend endpoint and connects the frontend to the recommendation model.
 
-## 🌐 Project Website – Rental Finder
+model_code.py
+Contains the match_houses() function, which calls the trained language model and returns relevant housing results based on natural language input.
 
-**Live Demo**: [https://ethanhu003.github.io/INDENG-243/](https://ethanhu003.github.io/INDENG-243/)
+Other Files
+243_LLM.ipynb
+Notebook used to develop and test the large language model (LLM)–based recommendation system.
 
-The website showcases an interactive rental recommendation tool for Philadelphia. It includes:
+Preprocessing.ipynb
+Notebook for preprocessing the raw housing dataset before model training and filtering.
 
-- A **natural language search bar** that interprets queries (e.g., "Phila big house 2000").
-- A list of **recommended listings** with price, size, and score details.
-- A **fullscreen interactive map** with toggles for facilities like schools, gyms, restaurants, etc.
-- Category-specific icons and map layers with hover popups and legends.
-- A responsive, animated, and visually enhanced UI.
-
-This tool demonstrates how user inputs can be converted into meaningful real estate insights using search interpretation, frontend filtering logic, and map-layer interaction design.
-
----
-
-Feel free to explore the code or view the live demo linked above.
+README.md
+This file. Contains documentation and file descriptions.
