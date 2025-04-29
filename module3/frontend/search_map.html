@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Philly Rent Recommendation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: #f0f0f0; 
+    }
+    header {
+      padding: 20px;
+      background: linear-gradient(90deg, #2c3e50, #182848);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    #search-container {
+      background: linear-gradient(to bottom, #2e2e2e, #1e1e1e);
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    #search-input {
+      border-radius: 20px;
+      padding: 12px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background-color: #2a2a2a;
+      color: #f0f0f0;
+      border: 1px solid #444;
+      width: 300px;
+    }
+    button {
+      border-radius: 20px;
+      background: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-left: 10px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    #content-container {
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      margin: 20px auto;
+      gap: 20px;
+    }
+    #results-container {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    #map-container {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 10px;
+      height: 500px;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card {
+      background: #333;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-left: 4px solid #3498db;
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      color: #f5f5f5;
+      font-size: 18px;
+    }
+    .card p {
+      margin: 6px 0;
+      color: #ddd;
+      font-size: 14px;
+    }
+    .card .price {
+      font-weight: bold;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .card .details {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+    }
+    .card .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .card .scores {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .card .score-item {
+      background: rgba(52, 152, 219, 0.2);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .search-instruction {
+      font-size: 18px;
+      color: #ffffffcc;
+      font-weight: 400;
+      margin-bottom: 16px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #facility-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      padding: 10px 0;
+    }
+    .facility-checkbox {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    .facility-checkbox input {
+      margin-right: 8px;
+    }
+    .legend {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(42, 42, 42, 0.9);
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      z-index: 1000;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 10px;
+    }
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-right: 5px;
+      display: inline-block;
+    }
+    .error-message {
+      color: #ff6b6b;
+      text-align: center;
+      padding: 20px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #3498db;
+    }
+    #disclaimer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .disclaimer-box {
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      text-align: center;
+    }
+    .disclaimer-box h2 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .disclaimer-box button {
+      margin-top: 20px;
+    }
+    .header-right img {
+      height: 40px;
+      width: auto;
+    }
+    .usage-guide {
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .usage-guide h2 {
+      color: #3498db;
+      margin-top: 0;
+    }
+    .usage-guide ul {
+      padding-left: 20px;
+    }
+    .usage-guide li {
+      margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+      #search-input {
+        width: 200px;
+      }
+      header {
+        flex-direction: column;
+      }
+      .header-right {
+        margin-top: 15px;
+      }
+      #facility-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-overlay">
+    <div class="disclaimer-box">
+      <h2>Disclaimer</h2>
+      <p>This website is part of the final project for UC Berkeley INDENG 243, Group 4.</p>
+      <p>It is created solely for academic demonstration and research purposes.</p>
+      <button onclick="closeDisclaimer()">I Agree</button>
+    </div>
+  </div>
+  
+  <header>
+    <div class="header-left">
+      <h1>Rental Finder</h1>
+    </div>
+    <div class="header-right">
+      <img src="berkeley_logo.png" alt="UC Berkeley" title="UC Berkeley" />
+    </div>
+  </header>
+  
+  <div id="search-container">
+    <p class="search-instruction">
+      PLEASE ENTER WHAT KIND OF HOUSE YOU'RE LOOKING FOR
+    </p>
+    <input type="text" id="search-input" placeholder="e.g. 2 bedroom apartment under $2000" />
+    <button onclick="search()">Search</button>
+  </div>
+
+  <div id="content-container">
+    <div id="results-container"></div>
+    <div id="map-container">
+      <div id="facility-controls">
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-schools" onchange="toggleFacilities('Schools')">
+          <label for="toggle-schools">🏫 Schools</label>
+        </div>
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-fitness" onchange="toggleFacilities('Fitness')">
+          <label for="toggle-fitness">💪 Fitness Centers</label>
+        </div>
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-restaurants" onchange="toggleFacilities('Restaurants')">
+          <label for="toggle-restaurants">🍽️ Restaurants</label>
+        </div>
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-hospitals" onchange="toggleFacilities('Hospitals')">
+          <label for="toggle-hospitals">🏥 Hospitals</label>
+        </div>
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-services" onchange="toggleFacilities('Services')">
+          <label for="toggle-services">🛠️ Home Services</label>
+        </div>
+        <div class="facility-checkbox">
+          <input type="checkbox" id="toggle-shopping" onchange="toggleFacilities('Shopping')">
+          <label for="toggle-shopping">🛍️ Shopping</label>
+        </div>
+      </div>
+      
+      <div id="map"></div>
+      
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map;
+    let rentalMarkers = [];
+    let facilityMarkers = {
+      Schools: [],
+      Fitness: [],
+      Restaurants: [],
+      Hospitals: [],
+      Services: [],
+      Shopping: []
+    };
+    let facilityData = {};
+
+    // 阻止页面滚动直到用户同意
+    document.body.style.overflow = 'hidden';
+
+    // Load facility data from JSON
+    fetch('facilities_data.json')
+      .then(response => response.json())
+      .then(data => {
+        facilityData = data;
+        console.log("Facility data loaded successfully");
+      })
+      .catch(error => {
+        console.error("Error loading facility data:", error);
+      });
+
+      function closeDisclaimer() {
+  document.getElementById("disclaimer-overlay").style.display = "none";
+  document.body.style.overflow = 'auto';
+  initMap();
+  
+  // Show usage guide
+  document.getElementById("results-container").innerHTML = `
+    <div class="usage-guide">
+      <h2>Quick Start Guide</h2>
+      <p>Search Philadelphia rentals like you'd ask a friend:</p>
+      
+      <ul>
+        <li><strong>"2 bed under $2k"</strong></li>
+        <li><strong>"studio near UPenn"</strong></li>
+        <li><strong>"apt with gym and pool"</strong></li>
+        <li><strong>"house w/ garage"</strong></li>
+      </ul>
+      
+      <p>Toggle map markers for nearby:
+        <br>🏫 Schools | 💪 Gyms | 🍽️ Food | 🏥 Hospitals | 🛠️ Services | 🛍️ Shopping
+      </p>
+      
+      <p><em>Tip: Combine filters for better results</em></p>
+    </div>
+  `;
+}
+
+    function initMap() {
+      if (map) {
+        map.remove();
+      }
+      
+      map = L.map('map', {
+        preferCanvas: true,
+        fadeAnimation: false
+      }).setView([39.9526, -75.1652], 12);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
+
+    function clearRentalMarkers() {
+      rentalMarkers.forEach(marker => map.removeLayer(marker));
+      rentalMarkers = [];
+    }
+
+    function clearFacilityMarkers() {
+      Object.keys(facilityMarkers).forEach(category => {
+        facilityMarkers[category].forEach(marker => map.removeLayer(marker));
+        facilityMarkers[category] = [];
+      });
+    }
+
+    function getMarkerIcon(color) {
+      return L.icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+    }
+
+    function getRandomFacilities(category, count = 10) {
+      if (!facilityData[category] || facilityData[category].length === 0) {
+        console.warn(`No facilities found for category: ${category}`);
+        return [];
+      }
+      
+      const facilities = [...facilityData[category]];
+      for (let i = facilities.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [facilities[i], facilities[j]] = [facilities[j], facilities[i]];
+      }
+      return facilities.slice(0, count);
+    }
+
+    function toggleFacilities(category) {
+      const checkbox = document.getElementById(`toggle-${category.toLowerCase()}`);
+      const isChecked = checkbox.checked;
+      
+      facilityMarkers[category].forEach(marker => map.removeLayer(marker));
+      facilityMarkers[category] = [];
+      
+      if (isChecked) {
+        if (!facilityData[category]) {
+          console.error(`Data not found for category: ${category}`);
+          return;
+        }
+
+        const facilities = getRandomFacilities(category);
+        const colorMap = {
+          'Schools': 'yellow',
+          'Fitness': 'green',
+          'Restaurants': 'orange',
+          'Hospitals': 'red',
+          'Services': 'violet',
+          'Shopping': 'grey'
+        };
+        
+        facilities.forEach(facility => {
+          if (!isValidCoordinate(facility.lat, facility.lng)) {
+            console.warn(`Invalid coordinates skipped: ${facility.name}`);
+            return;
+          }
+          
+          const marker = L.marker([facility.lat, facility.lng], {
+            icon: L.icon({
+              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorMap[category]}.png`,
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+            })
+          }).addTo(map)
+          .bindPopup(`<b>${facility.name}</b><br>${category}`);
+          
+          facilityMarkers[category].push(marker);
+        });
+      }
+    }
+
+    function isValidCoordinate(lat, lng) {
+      return lat >= 39.8 && lat <= 40.2 && lng >= -75.3 && lng <= -75.0;
+    }
+
+    async function search() {
+  const input = document.getElementById("search-input").value.trim();
+  if (!input) return;
+
+  const resultsContainer = document.getElementById("results-container");
+  resultsContainer.innerHTML = '<div class="loading">Searching for rentals...</div>';
+  clearRentalMarkers();
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/recommend", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ query: input })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    if (!data.results || data.results.length === 0) {
+      resultsContainer.innerHTML = '<div class="error-message">No matching rentals found. Try a different search.</div>';
+      return;
+    }
+
+    let resultsHTML = '';
+    data.results.forEach(result => {
+      const lat = result.latitude || 39.9526 + (Math.random() * 0.02 - 0.01);
+      const lng = result.longitude || -75.1652 + (Math.random() * 0.02 - 0.01);
+      
+      // 创建地图标记
+      const marker = L.marker([lat, lng], {
+        icon: getMarkerIcon('blue')
+      }).addTo(map)
+        .bindPopup(`<b>${result.ADDRESS || 'Address not available'}</b><br>Price: $${result.RENT_PRICE || 'N/A'}`);
+      rentalMarkers.push(marker);
+
+      // 构建卡片内容
+      resultsHTML += `
+        <div class="card">
+          <h3>${result.ADDRESS || 'Address not available'}</h3>
+          <p class="price">$${result.RENT_PRICE || 'N/A'}</p>
+          <div class="details">
+            ${result.SQFT ? `<span class="detail-item">🏠 ${result.SQFT} sqft</span>` : ''}
+            ${result.BEDS ? `<span class="detail-item">🛏️ ${result.BEDS} bd</span>` : ''}
+            ${result.BATHS ? `<span class="detail-item">🚿 ${result.BATHS} ba</span>` : ''}
+            ${result.BUILDING_TYPE ? `<span class="detail-item">🏡 ${result.BUILDING_TYPE}</span>` : ''}
+          </div>
+          ${result.amenities ? `<p>🛠️ Amenities: ${result.amenities}</p>` : ''}
+          ${result.scores ? `
+            <div class="scores">
+              ${Object.entries(result.scores).map(([category, score]) => 
+                `<span class="score-item">${getCategoryEmoji(category)} ${category}: ${score.toFixed(2)}</span>`
+              ).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    resultsContainer.innerHTML = resultsHTML;
+    
+    // 调整地图视图
+    if (rentalMarkers.length > 0) {
+      const group = new L.featureGroup(rentalMarkers);
+      map.fitBounds(group.getBounds().pad(0.1));
+    }
+
+  } catch (error) {
+    console.error("Error:", error);
+    resultsContainer.innerHTML = `
+      <div class="error-message">
+        Error: ${error.message}<br>
+        Make sure the backend server is running at http://127.0.0.1:5000/recommend
+      </div>
+    `;
+  }
+}
+
+    function getCategoryEmoji(category) {
+      const emojiMap = {
+        'Shopping': '🛍️',
+        'Food': '🍽️',
+        'Fitness': '🏋️',
+        'Schools': '🏫',
+        'Hospitals': '🏥',
+        'Services': '🛠️'
+      };
+      return emojiMap[category] || '📊';
+    }
+
+    // 初始化时不自动加载地图，等用户同意后才加载
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById("disclaimer-overlay").style.display = "flex";
+    });
+  </script>
+</body>
+</html>
